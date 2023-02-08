@@ -34,10 +34,10 @@ export type FactoryConstructor<F extends ContractFactory> = {
   bytecode: string;
 };
 
-export const buildContracts = <F extends { (signer?: Signer): inputContracts }>(funct: F) => {
+export const buildContracts = <F extends { (signer?: Signer): inputContracts }>(func: F) => {
   return {
-    connect: (signer: Signer) => funct(signer),
-    ...funct(),
+    connect: (signer: Signer) => func(signer),
+    ...func(),
   } as ReturnType<F> & outputContracts;
 };
 
