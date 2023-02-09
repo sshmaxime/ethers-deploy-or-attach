@@ -19,19 +19,12 @@ export type outputContracts = inputContracts & {
 };
 
 export interface ContractBuilder<F extends ContractFactory> {
-  metadata: {
-    contractName: string;
-    abi: any;
-    bytecode: string;
-  };
   deploy(...args: Parameters<F["deploy"]>): Promise<Contract<F>>;
   attach(address: string, signer?: Signer): Promise<Contract<F>>;
 }
 
 export type FactoryConstructor<F extends ContractFactory> = {
   new (signer?: Signer): F;
-  abi: any;
-  bytecode: string;
 };
 
 export const buildContracts = <F extends { (signer?: Signer): inputContracts }>(func: F) => {
@@ -58,15 +51,10 @@ export const initDeployOrAttach = (ethers: { getSigners(): Promise<any[]> }) => 
     FactoryConstructor: FactoryConstructor<F>,
     initialSigner?: Signer
   ): ContractBuilder<F> => {
-    const contractName = FactoryConstructor.name.replace("__factory", "");
+    // const contractName = FactoryConstructor.name.replace("__factory", "");
     return {
-      metadata: {
-        contractName: contractName,
-        abi: FactoryConstructor.abi,
-        bytecode: FactoryConstructor.bytecode,
-      },
       deploy: async (...args: Parameters<F["deploy"]>): Promise<Contract<F>> => {
-        const defaultSigner = initialSigner || (await ethers.getSigners())[0];
+        const defaultSigner = initialSigner ?? (await ethers.getSigners())[0];
         return new FactoryConstructor(defaultSigner).deploy(...(args || [])) as Contract<F>;
       },
       attach: attach<F>(FactoryConstructor, initialSigner).attach,
