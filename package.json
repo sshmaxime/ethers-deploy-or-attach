@@ -1,16 +1,17 @@
 {
   "name": "ethers-deploy-or-attach",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "repository": "git@github.com:sshmaxime/ethers-deploy-or-attach.git",
   "author": "Maxime Aubanel <maximeauba@gmail.com>",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
     "prepublish": "tsc"
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "ethers": "5.7.2"
+  },
   "dependencies": {
     "@types/node": "^18.13.0",
     "ethers": "5.7.2",
