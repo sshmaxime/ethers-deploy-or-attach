@@ -27,11 +27,30 @@ export type FactoryConstructor<F extends ContractFactory> = {
   new (signer?: Signer): F;
 };
 
-export const buildContracts = <F extends { (signer?: Signer): inputContracts }>(func: F) => {
+export const buildContracts = <T extends Record<keyof T, ContractFactory>>(
+  contracts: { [K in keyof T]: FactoryConstructor<T[K]> },
+  ethers: { getSigners(): Promise<any[]> }
+) => {
+  const { deployOrAttach } = initDeployOrAttach(ethers);
+
+  const buildContracts = (signer?: Signer) => {
+    const a: { [contractName: string]: any } = {};
+
+    for (const x in contracts) {
+      a[x] = deployOrAttach(contracts[x] as any, signer);
+    }
+
+    type MySuperType<T extends Record<keyof T, ContractFactory>> = {
+      [K in keyof T]: ContractBuilder<T[K]>;
+    };
+
+    return a as MySuperType<T>;
+  };
+
   return {
-    connect: (signer: Signer) => func(signer),
-    ...func(),
-  } as ReturnType<F> & outputContracts;
+    ...buildContracts(),
+    connect: (signer: Signer) => buildContracts(signer),
+  };
 };
 
 export const initDeployOrAttach = (ethers: { getSigners(): Promise<any[]> }) => {
@@ -54,7 +73,7 @@ export const initDeployOrAttach = (ethers: { getSigners(): Promise<any[]> }) => 
     // const contractName = FactoryConstructor.name.replace("__factory", "");
     return {
       deploy: async (...args: Parameters<F["deploy"]>): Promise<Contract<F>> => {
-        const defaultSigner = initialSigner ?? (await ethers.getSigners())[0];
+        const defaultSigner = initialSigner || (await ethers.getSigners())[0];
         return new FactoryConstructor(defaultSigner).deploy(...(args || [])) as Contract<F>;
       },
       attach: attach<F>(FactoryConstructor, initialSigner).attach,
