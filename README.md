@@ -2,6 +2,24 @@
 
 This package has been built to make the life of the average hardhat developer a little bit easier.
 
+It is built _on top_ of the hardhat typechain plugin and its sole purpose is to ease the process of dealing with the typechain generated.
+
+The final results:
+
+```typescript
+// Anywhere in your hardhat project
+import Contracts from "../components/Contracts";
+
+const myContract = await Contracts.MyContract.deploy(); // everything will be fully typed
+
+// Anywhere is an external package importing your contracts package
+import Contracts from "MyContracts"; // your contracts package
+import { buildContracts } from "ethers-deploy-or-attach";
+
+let contracts = buildContracts(Contracts).connect(mySigner);
+const myContract = await Contracts.MyContract.deploy(); // everything will be fully typed
+```
+
 ## Get started
 
 ### In your hardhat project
@@ -110,7 +128,12 @@ let contracts = buildContracts(Contracts);
 In our case something like:
 
 ```typescript
-const provider = new ethers.providers.Web3Provider(window.ethereum);
+import Contracts from "MyContracts";
 
+import { buildContracts } from "ethers-deploy-or-attach";
+
+let contracts = buildContracts(Contracts);
+
+const provider = new ethers.providers.Web3Provider(window.ethereum);
 contracts = contracts.connect(provider.getSigner());
 ```
