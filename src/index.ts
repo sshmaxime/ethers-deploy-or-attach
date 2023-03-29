@@ -1,23 +1,24 @@
+import { isNode } from "browser-or-node";
 import { Signer, ContractFactory } from "ethers";
 
-type AsyncReturnType<T extends (...args: any) => any> = T extends (...args: any) => Promise<infer U>
+// Get the return type of the function T that works with async methods
+type ReturnType<T extends (...args: any) => any> = T extends (...args: any) => Promise<infer U>
   ? U
   : T extends (...args: any) => infer U
   ? U
   : any;
 
-export type Contract<F extends ContractFactory> = AsyncReturnType<F["deploy"]>;
+export type Contract<F extends ContractFactory> = ReturnType<F["deploy"]>;
 
-//
 export type FactoryConstructor<F extends ContractFactory> = {
   new (signer?: Signer): F;
 };
 
-// Contract Builders types
 export interface ContractBuilder<F extends ContractFactory> {
   deploy(...args: Parameters<F["deploy"]>): Promise<Contract<F>>;
   attach(address: string, signer?: Signer): Promise<Contract<F>>;
 }
+
 export interface ContractBuilderAttachOnly<F extends ContractFactory> {
   attach(address: string, signer?: Signer): Contract<F>;
 }
@@ -27,12 +28,13 @@ type ContractOutput<T extends Record<keyof T, ContractFactory>> = {
   [K in keyof T]: ContractBuilder<T[K]>;
 } & { connect: (signer: Signer) => ContractOutput<T> };
 
-//
+// In a hardhat project
 export function buildContracts<T extends Record<keyof T, ContractFactory>>(
   contracts: { [K in keyof T]: FactoryConstructor<T[K]> },
   ethers: { getSigners(): Promise<any[]> }
 ): ContractOutput<T>;
 
+// In the browser
 export function buildContracts<T extends Record<keyof T, ContractFactory>>(contracts: {
   [K in keyof T]: FactoryConstructor<T[K]>;
 }): ContractOutput<T>;
@@ -41,6 +43,18 @@ export function buildContracts<T extends Record<keyof T, ContractFactory>>(
   contracts: { [K in keyof T]: FactoryConstructor<T[K]> },
   ethers?: { getSigners(): Promise<any[]> }
 ): ContractOutput<T> {
+  // If we are in a node process it means we are in a hardhat or alike type of process, hence
+  // make sure that the ethers variable is set
+  if (isNode) {
+    if (!ethers)
+      throw "ethers-deploy-or-attach: You are in a Node.Js-like process, the parameter [ ethers ] of `buildContracts` shoud be set.";
+  } else {
+    // If we are not in a node process, it means that we are in a browser or alike type
+    // of process, hence make sure that the ethers variable isn't set
+    if (ethers)
+      throw "ethers-deploy-or-attach: You are in a browser-like process, the parameter [ ethers ] of `buildContracts` shoud not be set.";
+  }
+
   const { deployOrAttach } = initDeployOrAttach(ethers);
 
   const myBuildContracts = (signer?: Signer): ContractOutput<T> => {

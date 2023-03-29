@@ -12,7 +12,7 @@ import Contracts from "../components/Contracts";
 
 const myContract = await Contracts.MyContract.deploy(); // everything will be fully typed
 
-// Anywhere is an external package importing your contracts package
+// Anywhere in an external package importing your contracts package
 import Contracts from "MyContracts"; // your contracts package
 import { buildContracts } from "ethers-deploy-or-attach";
 
