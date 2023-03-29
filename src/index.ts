@@ -43,18 +43,6 @@ export function buildContracts<T extends Record<keyof T, ContractFactory>>(
   contracts: { [K in keyof T]: FactoryConstructor<T[K]> },
   ethers?: { getSigners(): Promise<any[]> }
 ): ContractOutput<T> {
-  // If we are in a node process it means we are in a hardhat or alike type of process, hence
-  // make sure that the ethers variable is set
-  if (isNode) {
-    if (!ethers)
-      throw "ethers-deploy-or-attach: You are in a Node.Js-like process, the parameter [ ethers ] of `buildContracts` shoud be set.";
-  } else {
-    // If we are not in a node process, it means that we are in a browser or alike type
-    // of process, hence make sure that the ethers variable isn't set
-    if (ethers)
-      throw "ethers-deploy-or-attach: You are in a browser-like process, the parameter [ ethers ] of `buildContracts` shoud not be set.";
-  }
-
   const { deployOrAttach } = initDeployOrAttach(ethers);
 
   const myBuildContracts = (signer?: Signer): ContractOutput<T> => {
